@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import { RawNodeDatum, TreeNodeDatum } from "react-d3-tree";
-import { Box, Stack } from "@chakra-ui/react";
+import { Box, Stack, useToast } from "@chakra-ui/react";
 import { AddMemberModal } from "@/components/modal";
 import { generateDatum, generateDatumChildren } from "@/helpers/generate";
 import {
@@ -54,24 +54,37 @@ export default function Home() {
     generateDatum("Joao Rei do Bitcoin")
   );
   const [node, setNode] = useState<TreeNodeDatum | undefined>();
+  const toast = useToast();
 
   const close = () => setNode(undefined);
 
+  const errorToast = () => {
+    toast({
+      title: "Error",
+      // description: "We've created your account for you.",
+      status: "error",
+      duration: 1000,
+      isClosable: true,
+    });
+  };
+
   const handleNodeClick = (datum: TreeNodeDatum) => {
-    if (isNotDatumEmpty(datum.name)) return;
+    if (isNotDatumEmpty(datum.name)) {
+      return errorToast();
+    }
 
     if (
       isBinaryNotClosed(tree) &&
       isDatumOutOfBinaryLevel(datum.attributes!.id as string, tree)
     ) {
-      return;
+      return errorToast();
     }
 
-    console.log(isFollowingSpilling(datum));
-
-    if (isFollowingSpilling(datum)) {
-      setNode(datum);
+    if (!isFollowingSpilling(datum)) {
+      return errorToast();
     }
+
+    return setNode(datum);
   };
 
   const handleSubmit = (familyMemberName: string) => {
