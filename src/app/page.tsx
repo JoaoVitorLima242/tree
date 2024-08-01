@@ -2,20 +2,16 @@
 
 import dynamic from "next/dynamic";
 import { useState } from "react";
-import {
-  CustomNodeElementProps,
-  RawNodeDatum,
-  TreeNodeDatum,
-} from "react-d3-tree";
-import { Box, position, Stack } from "@chakra-ui/react";
+import { RawNodeDatum, TreeNodeDatum } from "react-d3-tree";
+import { Box, Stack } from "@chakra-ui/react";
 import { AddMemberModal } from "@/components/modal";
-import { v4 } from "uuid";
 import { generateDatum, generateDatumChildren } from "@/helpers/generate";
 import {
   isBinaryNotClosed,
   isDatumOutOfBinaryLevel,
   isNotDatumEmpty,
 } from "@/helpers/validation";
+import { Datum } from "@/components/datum";
 
 const Tree = dynamic(() => import("react-d3-tree"), {
   ssr: false,
@@ -66,9 +62,6 @@ export default function Home() {
     )
       return;
 
-    console.log(isBinaryNotClosed(tree));
-    console.log(isDatumOutOfBinaryLevel(datum.attributes!.id as string, tree));
-
     setNode(datum);
   };
 
@@ -80,23 +73,6 @@ export default function Home() {
     }
 
     setNode(undefined);
-  };
-
-  const renderRectSvgNode = (
-    customProps: CustomNodeElementProps,
-    click: (datum: TreeNodeDatum) => void
-  ) => {
-    const { nodeDatum } = customProps;
-    const color = nodeDatum.name ? "#a8f5ff" : "#888";
-
-    return (
-      <g>
-        <circle r="15" fill={color} onClick={() => click(nodeDatum)} />
-        <text fill="black" strokeWidth="0.5" x="20" y="-5">
-          {nodeDatum.name}
-        </text>
-      </g>
-    );
   };
 
   return (
@@ -112,9 +88,9 @@ export default function Home() {
             x: 200,
             y: 200,
           }}
-          renderCustomNodeElement={(nodeInfo) =>
-            renderRectSvgNode(nodeInfo, handleNodeClick)
-          }
+          renderCustomNodeElement={(nodeInfo) => (
+            <Datum customProps={nodeInfo} click={handleNodeClick} />
+          )}
         />
         <AddMemberModal
           onSubmit={(familyMemberName) => handleSubmit(familyMemberName)}
