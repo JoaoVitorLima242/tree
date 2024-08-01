@@ -2,20 +2,31 @@
 
 import dynamic from "next/dynamic";
 import { useState } from "react";
-import { RawNodeDatum, TreeNodeDatum } from "react-d3-tree";
-import { Box, Stack, useDisclosure, useModal } from "@chakra-ui/react";
+import {
+  CustomNodeElementProps,
+  RawNodeDatum,
+  TreeNodeDatum,
+} from "react-d3-tree";
+import { Box, position, Stack } from "@chakra-ui/react";
 import { AddMemberModal } from "@/components/modal";
 import { v4 } from "uuid";
+import { generateDatum, generateDatumChildren } from "@/helpers/generate";
+import {
+  isBinaryNotClosed,
+  isDatumOutOfBinaryLevel,
+  isNotDatumEmpty,
+} from "@/helpers/validation";
 
 const Tree = dynamic(() => import("react-d3-tree"), {
   ssr: false,
 });
 
-export function bfs(
-  id: string,
-  tree: RawNodeDatum | RawNodeDatum[],
-  node: RawNodeDatum
-) {
+export enum Directions {
+  LEFT = 0,
+  RIGHT = 1,
+}
+
+export function bfs(id: string, tree: RawNodeDatum, name: string) {
   const queue: RawNodeDatum[] = [];
 
   queue.unshift(tree as RawNodeDatum);
@@ -24,8 +35,8 @@ export function bfs(
     const curNode = queue.pop();
 
     if (curNode!.attributes?.id === id) {
-      console.log(node);
-      curNode!.children!.push(node);
+      curNode!.name = name;
+      curNode!.children = generateDatumChildren();
 
       return { ...tree };
     }
@@ -39,44 +50,30 @@ export function bfs(
 }
 
 export default function Home() {
-  const [tree, setTree] = useState<RawNodeDatum | RawNodeDatum[]>({
-    name: "Root",
-    attributes: {
-      id: "411d9783-85ba-41e5-a6a3-5e1cca3d294f",
-    },
-    children: [
-      {
-        name: "Root 1.1",
-        attributes: {
-          id: "411d9783-85ba-41e5-a6a3-5e1cca3d294f2",
-        },
-        children: [],
-      },
-      {
-        name: "Root 1.2",
-        attributes: {
-          id: "411d9783-85ba-41e5-a6a3-5e1cca3d294f3",
-        },
-        children: [],
-      },
-    ],
-  });
+  const [tree, setTree] = useState<RawNodeDatum>(
+    generateDatum("Joao Rei do Bitcoin")
+  );
   const [node, setNode] = useState<TreeNodeDatum | undefined>();
 
   const close = () => setNode(undefined);
 
   const handleNodeClick = (datum: TreeNodeDatum) => {
+    if (isNotDatumEmpty(datum.name)) return;
+
+    if (
+      isBinaryNotClosed(tree) &&
+      isDatumOutOfBinaryLevel(datum.attributes!.id as string, tree)
+    )
+      return;
+
+    console.log(isBinaryNotClosed(tree));
+    console.log(isDatumOutOfBinaryLevel(datum.attributes!.id as string, tree));
+
     setNode(datum);
   };
 
   const handleSubmit = (familyMemberName: string) => {
-    const newTree = bfs(node!.attributes?.id as string, tree, {
-      name: familyMemberName,
-      attributes: {
-        id: v4(),
-      },
-      children: [],
-    });
+    const newTree = bfs(node!.attributes?.id as string, tree, familyMemberName);
 
     if (newTree) {
       setTree(newTree);
@@ -90,10 +87,11 @@ export default function Home() {
     click: (datum: TreeNodeDatum) => void
   ) => {
     const { nodeDatum } = customProps;
+    const color = nodeDatum.name ? "#a8f5ff" : "#888";
 
     return (
       <g>
-        <circle r="15" fill={"#777"} onClick={() => click(nodeDatum)} />
+        <circle r="15" fill={color} onClick={() => click(nodeDatum)} />
         <text fill="black" strokeWidth="0.5" x="20" y="-5">
           {nodeDatum.name}
         </text>
@@ -107,7 +105,9 @@ export default function Home() {
         <Tree
           data={tree}
           zoomable={true}
+          // @ts-ignore
           onNodeClick={handleNodeClick}
+          orientation="vertical"
           translate={{
             x: 200,
             y: 200,

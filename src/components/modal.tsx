@@ -11,7 +11,7 @@ import {
   ModalHeader,
   ModalOverlay,
 } from "@chakra-ui/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface AddMemberModalProps {
   isOpen: boolean;
@@ -25,6 +25,10 @@ export const AddMemberModal = ({
   onSubmit,
 }: AddMemberModalProps) => {
   const [name, setName] = useState("");
+
+  useEffect(() => {
+    setName("");
+  }, [isOpen]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
