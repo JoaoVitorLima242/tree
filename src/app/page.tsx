@@ -9,6 +9,7 @@ import { generateDatum, generateDatumChildren } from "@/helpers/generate";
 import {
   isBinaryNotClosed,
   isDatumOutOfBinaryLevel,
+  isFollowingSpilling,
   isNotDatumEmpty,
 } from "@/helpers/validation";
 import { Datum } from "@/components/datum";
@@ -20,6 +21,7 @@ const Tree = dynamic(() => import("react-d3-tree"), {
 export enum Directions {
   LEFT = 0,
   RIGHT = 1,
+  ROOT = 2,
 }
 
 export function bfs(id: string, tree: RawNodeDatum, name: string) {
@@ -32,7 +34,9 @@ export function bfs(id: string, tree: RawNodeDatum, name: string) {
 
     if (curNode!.attributes?.id === id) {
       curNode!.name = name;
-      curNode!.children = generateDatumChildren();
+      curNode!.children = generateDatumChildren(
+        (curNode as RawNodeDatum).attributes!.position as Directions
+      );
 
       return { ...tree };
     }
@@ -59,10 +63,15 @@ export default function Home() {
     if (
       isBinaryNotClosed(tree) &&
       isDatumOutOfBinaryLevel(datum.attributes!.id as string, tree)
-    )
+    ) {
       return;
+    }
 
-    setNode(datum);
+    console.log(isFollowingSpilling(datum));
+
+    if (isFollowingSpilling(datum)) {
+      setNode(datum);
+    }
   };
 
   const handleSubmit = (familyMemberName: string) => {
@@ -74,6 +83,8 @@ export default function Home() {
 
     setNode(undefined);
   };
+
+  console.log(tree);
 
   return (
     <Stack direction="row" spacing="md">

@@ -8,17 +8,20 @@ export const generateDatum = (name: string): RawNodeDatum => {
     attributes: {
       id: v4(),
     },
-    children: generateDatumChildren(),
+    children: generateDatumChildren(Directions.ROOT),
   };
 };
 
-export const generateDatumChildren = (): RawNodeDatum[] => {
+export const generateDatumChildren = (
+  parentPosition: Directions
+): RawNodeDatum[] => {
   return [
     {
       name: "",
       attributes: {
         id: v4(),
         position: Directions.LEFT,
+        parentPosition: parentPosition,
       },
       children: [],
     },
@@ -27,6 +30,7 @@ export const generateDatumChildren = (): RawNodeDatum[] => {
       attributes: {
         id: v4(),
         position: Directions.RIGHT,
+        parentPosition: parentPosition,
       },
       children: [],
     },

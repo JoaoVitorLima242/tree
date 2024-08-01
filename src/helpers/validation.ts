@@ -21,3 +21,18 @@ export const isDatumOutOfBinaryLevel = (
     binaryLevelItems[Directions.RIGHT].attributes!.id !== id
   );
 };
+
+export const isFollowingSpilling = (datum: RawNodeDatum) => {
+  const datumAttributes = datum.attributes!;
+  const isRootChild = datumAttributes.parentPosition === Directions.ROOT;
+  const isFollowingParentPosition =
+    datumAttributes.position === datumAttributes.parentPosition;
+
+  if (isRootChild) {
+    return true;
+  }
+
+  console.log(datumAttributes.position, datumAttributes.parentPosition);
+
+  return isFollowingParentPosition;
+};
